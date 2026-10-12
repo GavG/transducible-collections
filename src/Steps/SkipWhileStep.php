@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace GavG\TransducibleCollections\Steps;
 
+use GavG\TransducibleCollections\CallableArity;
 use GavG\TransducibleCollections\StepInterface;
 
 class SkipWhileStep implements StepInterface
 {
+    use CallableArity;
+
     protected bool $skipping = true;
 
     /**
@@ -20,16 +23,13 @@ class SkipWhileStep implements StepInterface
         callable $predicate
     ) {
         $this->predicate = $predicate;
+        $this->resolveArity($predicate);
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed
     {
         if ($this->skipping) {
-            try {
-                $passes = ($this->predicate)($value, $key);
-            } catch (\ArgumentCountError) {
-                $passes = ($this->predicate)($value);
-            }
+            $passes = $this->invoke($this->predicate, $value, $key);
 
             if ($passes) {
                 return $acc;

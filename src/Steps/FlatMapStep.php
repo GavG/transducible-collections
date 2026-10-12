@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace GavG\TransducibleCollections\Steps;
 
+use GavG\TransducibleCollections\CallableArity;
 use GavG\TransducibleCollections\Reduced;
 use GavG\TransducibleCollections\StepInterface;
 
 class FlatMapStep implements StepInterface
 {
+    use CallableArity;
+
     /**
      * @var callable
      */
@@ -19,15 +22,12 @@ class FlatMapStep implements StepInterface
         callable $callback
     ) {
         $this->callback = $callback;
+        $this->resolveArity($callback);
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed
     {
-        try {
-            $items = ($this->callback)($value, $key);
-        } catch (\ArgumentCountError) {
-            $items = ($this->callback)($value);
-        }
+        $items = $this->invoke($this->callback, $value, $key);
 
         if (! is_iterable($items)) {
             $items = [$items];

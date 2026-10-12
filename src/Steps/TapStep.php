@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace GavG\TransducibleCollections\Steps;
 
+use GavG\TransducibleCollections\CallableArity;
 use GavG\TransducibleCollections\StepInterface;
 
 class TapStep implements StepInterface
 {
+    use CallableArity;
+
     /**
      * @var callable
      */
@@ -18,15 +21,12 @@ class TapStep implements StepInterface
         callable $callback
     ) {
         $this->callback = $callback;
+        $this->resolveArity($callback);
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed
     {
-        try {
-            ($this->callback)($value, $key);
-        } catch (\ArgumentCountError) {
-            ($this->callback)($value);
-        }
+        $this->invoke($this->callback, $value, $key);
 
         return $this->next->step($acc, $value, $key);
     }

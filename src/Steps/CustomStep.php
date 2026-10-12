@@ -13,18 +13,32 @@ class CustomStep implements StepInterface
      */
     protected $step;
 
+    /**
+     * Whether the custom step callable accepts all three args (acc, value, key).
+     */
+    private bool $acceptsKey;
+
     public function __construct(callable $step)
     {
         $this->step = $step;
+
+        try {
+            $ref = $step instanceof \Closure
+                ? new \ReflectionFunction($step)
+                : (is_string($step) && function_exists($step)
+                    ? new \ReflectionFunction($step)
+                    : new \ReflectionFunction(\Closure::fromCallable($step)));
+            $this->acceptsKey = $ref->getNumberOfParameters() >= 3;
+        } catch (\ReflectionException) {
+            $this->acceptsKey = false;
+        }
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed
     {
-        try {
-            return ($this->step)($acc, $value, $key);
-        } catch (\ArgumentCountError) {
-            return ($this->step)($acc, $value);
-        }
+        return $this->acceptsKey
+            ? ($this->step)($acc, $value, $key)
+            : ($this->step)($acc, $value);
     }
 
     public function complete(mixed $acc): mixed

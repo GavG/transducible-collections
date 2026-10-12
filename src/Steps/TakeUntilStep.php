@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace GavG\TransducibleCollections\Steps;
 
+use GavG\TransducibleCollections\CallableArity;
 use GavG\TransducibleCollections\Reduced;
 use GavG\TransducibleCollections\StepInterface;
 
 class TakeUntilStep implements StepInterface
 {
+    use CallableArity;
+
     /**
      * @var callable
      */
@@ -19,15 +22,12 @@ class TakeUntilStep implements StepInterface
         callable $predicate
     ) {
         $this->predicate = $predicate;
+        $this->resolveArity($predicate);
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed
     {
-        try {
-            $passes = ($this->predicate)($value, $key);
-        } catch (\ArgumentCountError) {
-            $passes = ($this->predicate)($value);
-        }
+        $passes = $this->invoke($this->predicate, $value, $key);
 
         if (! $passes) {
             return $this->next->step($acc, $value, $key);
