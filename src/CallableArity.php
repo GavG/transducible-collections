@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace GavG\TransducibleCollections;
 
+use Closure;
+use ReflectionFunction;
+
 /**
  * Determines at construction time whether a callable accepts a second argument,
  * avoiding the need for a try/catch on every invocation.
@@ -26,22 +29,9 @@ trait CallableArity
      */
     private function resolveArity(callable $callable): void
     {
-        try {
-            if (is_string($callable) && function_exists($callable)) {
-                $ref = new \ReflectionFunction($callable);
-            } elseif (is_array($callable)) {
-                $ref = new \ReflectionMethod($callable[0], $callable[1]);
-            } elseif (is_object($callable) && ! $callable instanceof \Closure) {
-                $ref = new \ReflectionMethod($callable, '__invoke');
-            } else {
-                $ref = new \ReflectionFunction($callable);
-            }
-
-            $this->callableAcceptsKey = $ref->getNumberOfParameters() >= 2;
-        } catch (\ReflectionException) {
-            // If reflection fails for any reason, default to single-arg call to be safe.
-            $this->callableAcceptsKey = false;
-        }
+        $this->callableAcceptsKey = new ReflectionFunction(
+            Closure::fromCallable($callable)
+        )->getNumberOfParameters() >= 2;
     }
 
     /**
