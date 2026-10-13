@@ -490,7 +490,11 @@ class TransducerPipeline
             $pipeline = ($this->transducers[$i])($pipeline);
         }
 
-        $acc = $initial ?? ($step !== null ? null : []);
+        // For the CollectStep path, use the step itself as the initial accumulator —
+        // step() returns $this (the same object handle) on every call, so PHP's
+        // copy-on-write array duplication is never triggered.
+        // For custom step/initial paths, behaviour is unchanged.
+        $acc = $initial ?? ($step !== null ? null : $finalStep);
         foreach ($currentSource as $key => $value) {
             $acc = $pipeline->step($acc, $value, $key);
             if (Reduced::isReduced($acc)) {

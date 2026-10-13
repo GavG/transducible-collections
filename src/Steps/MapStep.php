@@ -18,17 +18,18 @@ class MapStep implements StepInterface
 
     public function __construct(
         protected StepInterface $next,
-        callable $callback
+        callable $callback,
     ) {
         $this->callback = $callback;
-        $this->resolveArity($callback);
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed
     {
-        $mapped = $this->invoke($this->callback, $value, $key);
-
-        return $this->next->step($acc, $mapped, $key);
+        return $this->next->step(
+            acc: $acc,
+            value: $this->invoke($this->callback, $value, $key),
+            key: $key,
+        );
     }
 
     public function complete(mixed $acc): mixed

@@ -4,41 +4,60 @@ declare(strict_types=1);
 
 namespace GavG\TransducibleCollections;
 
-use Closure;
-use ReflectionFunction;
-
 /**
- * Determines at construction time whether a callable accepts a second argument,
- * avoiding the need for a try/catch on every invocation.
+ * Efficiently resolves whether a callable accepts a (value, key) pair or
+ * just a single (value) argument, caching the result to avoid per-element
+ * overhead.
  *
- * PHP built-in functions (e.g. 'strtoupper', 'strlen') throw ArgumentCountError
- * when called with more arguments than they declare. Closures and user-defined
- * functions silently ignore extra arguments. By inspecting arity once via
- * reflection we can pick the right call signature up-front and pay zero
- * exception overhead per element.
+ * Strategy — lazy with closure fast-path:
+ *  - On the first call to invoke(), the arity is detected and cached.
+ *  - Closures are immediately marked as key-accepting at zero cost (they
+ *    never throw ArgumentCountError with extra arguments).
+ *  - All other callables (PHP built-ins like 'strtoupper', named functions,
+ *    array callables, invokable objects) are inspected once via reflection.
+ *  - All subsequent calls branch on the cached bool — no reflection, no
+ *    exception handling.
+ *
+ * No explicit setup call is required in step constructors; invoke() handles
+ * everything automatically on first use.
  */
 trait CallableArity
 {
     /**
      * Whether the callable accepts two or more parameters (value + key).
+     * Uninitialised until the first invoke() call.
      */
     private bool $callableAcceptsKey;
 
     /**
-     * Resolve and cache whether $callable accepts a second (key) argument.
-     */
-    private function resolveArity(callable $callable): void
-    {
-        $this->callableAcceptsKey = new ReflectionFunction(
-            Closure::fromCallable($callable)
-        )->getNumberOfParameters() >= 2;
-    }
-
-    /**
-     * Invoke $callable with ($value, $key) or just ($value) based on cached arity.
+     * Invoke $callable with ($value, $key) or just ($value).
+     *
+     * Detects and caches arity on the first call, then branches cheaply
+     * on every subsequent call.
      */
     private function invoke(callable $callable, mixed $value, mixed $key): mixed
     {
+        if (! isset($this->callableAcceptsKey)) {
+            // Closures silently ignore extra args — no reflection needed.
+            if ($callable instanceof \Closure) {
+                $this->callableAcceptsKey = true;
+            } else {
+                // One-time reflection for built-ins / named functions / array callables.
+                try {
+                    if (is_array($callable)) {
+                        $ref = new \ReflectionMethod($callable[0], $callable[1]);
+                    } elseif (is_string($callable)) {
+                        $ref = new \ReflectionFunction($callable);
+                    } else {
+                        $ref = new \ReflectionMethod($callable, '__invoke');
+                    }
+                    $this->callableAcceptsKey = $ref->getNumberOfParameters() >= 2;
+                } catch (\ReflectionException) {
+                    $this->callableAcceptsKey = false;
+                }
+            }
+        }
+
         return $this->callableAcceptsKey
             ? $callable($value, $key)
             : $callable($value);

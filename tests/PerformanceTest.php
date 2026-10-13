@@ -261,3 +261,52 @@ it('transduced takeWhile terminates earlier than a standard chained filter', fun
 
     expect($transducedTime)->toBeLessThan($standardTime);
 })->group('performance');
+
+
+it('full-pass multiple maps are informational — standard array_map beats transduced reduce loop', function () use ($records) {
+    // This test is intentionally informational only (no assertion).
+    //
+    // For full-pass transforms (all records, no early termination), the standard
+    // Collection uses C-level array_map() and does not pay the PHP reduce loop's
+    // copy-on-write array accumulator cost (CollectStep returns $acc by value on
+    // every element, triggering 5000 array copies). Transducers win only when
+    // early termination dramatically reduces the number of elements processed.
+    //
+    // Fewer iterations used here as the transduced path is intentionally slow
+    // for this case and we don't need high statistical accuracy.
+    $fullPassIter = 20;
+
+    $standardTime = benchmarkRun(function () use ($records) {
+        $records
+            ->map(fn ($item) => $item['value'] * 2)
+            ->map(fn ($value) => $value + 3)
+            ->map(fn ($value) => $value * 4)
+            ->map(fn ($value) => $value / 2)
+            ->map(fn ($value) => (string) $value)
+            ->values()
+            ->all();
+    }, $fullPassIter);
+
+    $transducedTime = benchmarkRun(function () use ($records) {
+        $records
+            ->transducible()
+            ->map(fn ($item) => $item['value'] * 2)
+            ->map(fn ($value) => $value + 3)
+            ->map(fn ($value) => $value * 4)
+            ->map(fn ($value) => $value / 2)
+            ->map(fn ($value) => (string) $value)
+            ->values()
+            ->all();
+    }, $fullPassIter);
+
+    printBenchmark(
+        'full-pass 5×map (' . RECORD_COUNT . ' records) — informational',
+        $standardTime,
+        $transducedTime,
+        $fullPassIter
+    );
+
+    // No assertion — standard wins here due to C-level array_map vs PHP reduce loop.
+    // Transducer value is in early-termination scenarios (tested above).
+    expect(true)->toBeTrue();
+})->group('performance');

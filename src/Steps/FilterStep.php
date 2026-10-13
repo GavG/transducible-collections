@@ -21,7 +21,6 @@ class FilterStep implements StepInterface
         ?callable $predicate = null
     ) {
         $this->predicate = $predicate ?? fn ($value) => (bool) $value;
-        $this->resolveArity($this->predicate);
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed

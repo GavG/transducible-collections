@@ -22,7 +22,6 @@ class TakeWhileStep implements StepInterface
         callable $predicate
     ) {
         $this->predicate = $predicate;
-        $this->resolveArity($predicate);
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed

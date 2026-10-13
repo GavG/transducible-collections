@@ -30,12 +30,6 @@ class GroupStep implements StepInterface
         } else {
             $this->currentGroupBy = $groupBy;
         }
-
-        if (is_callable($this->currentGroupBy)) {
-            $this->resolveArity($this->currentGroupBy);
-        } else {
-            $this->callableAcceptsKey = false;
-        }
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed

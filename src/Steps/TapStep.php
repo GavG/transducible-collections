@@ -21,7 +21,6 @@ class TapStep implements StepInterface
         callable $callback
     ) {
         $this->callback = $callback;
-        $this->resolveArity($callback);
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed

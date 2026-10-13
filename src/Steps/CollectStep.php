@@ -10,6 +10,17 @@ use Illuminate\Support\Collection;
 class CollectStep implements StepInterface
 {
     /**
+     * The mutable accumulator array, held as object state so that PHP's
+     * copy-on-write mechanism is never triggered during the reduce loop.
+     *
+     * Because objects are always passed by handle in PHP, returning $this
+     * from step() means the caller's $acc variable is reassigned to the
+     * same object — no array duplication ever occurs regardless of how
+     * many elements are processed.
+     */
+    private array $items = [];
+
+    /**
      * @param  class-string<Collection>  $collectionClass
      */
     public function __construct(
@@ -17,25 +28,21 @@ class CollectStep implements StepInterface
     ) {
     }
 
-    public function step(mixed $acc, mixed $value, mixed $key): mixed
+    public function step(mixed $acc, mixed $value, mixed $key): static
     {
-        if (! is_array($acc)) {
-            $acc = [];
-        }
-
         if ($key === null) {
-            $acc[] = $value;
+            $this->items[] = $value;
         } else {
-            $acc[$key] = $value;
+            $this->items[$key] = $value;
         }
 
-        return $acc;
+        return $this;
     }
 
-    public function complete(mixed $acc): mixed
+    public function complete(mixed $acc): Collection
     {
         $class = $this->collectionClass;
 
-        return new $class(is_array($acc) ? $acc : []);
+        return new $class($this->items);
     }
 }

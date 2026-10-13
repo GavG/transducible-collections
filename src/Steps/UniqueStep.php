@@ -17,11 +17,6 @@ class UniqueStep implements StepInterface
         protected StepInterface $next,
         protected mixed $key = null
     ) {
-        if (is_callable($this->key)) {
-            $this->resolveArity($this->key);
-        } else {
-            $this->callableAcceptsKey = false;
-        }
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed

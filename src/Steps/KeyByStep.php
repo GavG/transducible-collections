@@ -15,11 +15,6 @@ class KeyByStep implements StepInterface
         protected StepInterface $next,
         protected mixed $keyBy
     ) {
-        if (is_callable($this->keyBy)) {
-            $this->resolveArity($this->keyBy);
-        } else {
-            $this->callableAcceptsKey = false;
-        }
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed

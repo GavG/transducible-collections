@@ -19,10 +19,9 @@ class FlatMapStep implements StepInterface
 
     public function __construct(
         protected StepInterface $next,
-        callable $callback
+        callable $callback,
     ) {
         $this->callback = $callback;
-        $this->resolveArity($callback);
     }
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed
