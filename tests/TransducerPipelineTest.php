@@ -32,6 +32,34 @@ it('supports single-parameter map callbacks', function () {
     expect($result->all())->toBe(['A', 'B', 'C']);
 });
 
+it('handles Closure::fromCallable wrapping a strict built-in correctly', function () {
+    // Closure::fromCallable('strlen') produces a Closure that enforces strlen's
+    // strict single-argument arity — calling it with (value, key) would throw
+    // ArgumentCountError if arity detection treated it as a regular closure.
+    $result = collect(['hello', 'world', 'foo'])
+        ->transducible()
+        ->map(\Closure::fromCallable('strtoupper'))
+        ->transduce();
+
+    expect($result->all())->toBe(['HELLO', 'WORLD', 'FOO']);
+
+    // Also verify with filter — built-in wrapped in Closure
+    $result = collect([1, 2, 3, 4, 5])
+        ->transducible()
+        ->filter(\Closure::fromCallable('is_int'))
+        ->transduce();
+
+    expect($result->values()->all())->toBe([1, 2, 3, 4, 5]);
+
+    // And a two-parameter built-in wrapped in Closure — should pass both args
+    $result = collect(['hello world', 'foo bar'])
+        ->transducible()
+        ->map(\Closure::fromCallable('strtolower'))
+        ->transduce();
+
+    expect($result->all())->toBe(['hello world', 'foo bar']);
+});
+
 it('supports mapWithKeys', function () {
     $result = collect([
         ['id' => 10, 'name' => 'Desk'],

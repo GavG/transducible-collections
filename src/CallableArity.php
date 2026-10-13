@@ -38,23 +38,19 @@ trait CallableArity
     private function invoke(callable $callable, mixed $value, mixed $key): mixed
     {
         if (! isset($this->callableAcceptsKey)) {
-            // Closures silently ignore extra args — no reflection needed.
-            if ($callable instanceof \Closure) {
-                $this->callableAcceptsKey = true;
-            } else {
-                // One-time reflection for built-ins / named functions / array callables.
-                try {
-                    if (is_array($callable)) {
-                        $ref = new \ReflectionMethod($callable[0], $callable[1]);
-                    } elseif (is_string($callable)) {
-                        $ref = new \ReflectionFunction($callable);
-                    } else {
-                        $ref = new \ReflectionMethod($callable, '__invoke');
-                    }
-                    $this->callableAcceptsKey = $ref->getNumberOfParameters() >= 2;
-                } catch (\ReflectionException) {
-                    $this->callableAcceptsKey = false;
-                }
+            // Use Closure::fromCallable() to normalise any callable type — strings,
+            // arrays, invokable objects, and closures — into a single Closure that
+            // ReflectionFunction can always introspect.
+            //
+            // We cannot skip reflection for closures: Closure::fromCallable('strlen')
+            // produces a Closure that *does* enforce strict arity (it inherits the
+            // built-in's argument count), so `instanceof \Closure` alone is not a
+            // reliable signal that extra arguments are safe to pass.
+            try {
+                $ref = new \ReflectionFunction(\Closure::fromCallable($callable));
+                $this->callableAcceptsKey = $ref->getNumberOfParameters() >= 2;
+            } catch (\ReflectionException) {
+                $this->callableAcceptsKey = false;
             }
         }
 
