@@ -18,10 +18,11 @@ class CollectStep implements StepInterface
      * same object — no array duplication ever occurs regardless of how
      * many elements are processed.
      */
+    /** @var array<mixed> */
     private array $items = [];
 
     /**
-     * @param  class-string<Collection>  $collectionClass
+     * @param  class-string<Collection<int|string, mixed>>  $collectionClass
      */
     public function __construct(
         protected string $collectionClass = Collection::class
@@ -39,6 +40,7 @@ class CollectStep implements StepInterface
         return $this;
     }
 
+    /** @return Collection<int|string, mixed> */
     public function complete(mixed $acc): Collection
     {
         $class = $this->collectionClass;

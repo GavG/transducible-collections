@@ -14,10 +14,11 @@ class GroupStep implements StepInterface
     use CallableArity;
 
     protected mixed $currentGroupBy;
+    /** @var array<mixed> */
     protected array $nextGroups = [];
 
     /**
-     * @param  class-string<Collection>  $collectionClass
+     * @param  class-string<Collection<int|string, mixed>>  $collectionClass
      */
     public function __construct(
         mixed $groupBy,

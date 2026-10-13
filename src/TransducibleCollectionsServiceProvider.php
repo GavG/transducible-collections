@@ -16,13 +16,13 @@ class TransducibleCollectionsServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Collection::macro('transducible', function () {
-            /** @var Collection $this */
+            /** @var Collection<int|string, mixed> $this */
             return new TransducerPipeline($this);
         });
 
         if (class_exists(LazyCollection::class)) {
             LazyCollection::macro('transducible', function () {
-                /** @var LazyCollection $this */
+                /** @var LazyCollection<int|string, mixed> $this */
                 return new TransducerPipeline($this);
             });
         }

@@ -11,6 +11,7 @@ class UniqueStep implements StepInterface
 {
     use CallableArity;
 
+    /** @var array<string, bool> */
     protected array $seen = [];
 
     public function __construct(

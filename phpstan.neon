@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 6
+
+    paths:
+        - src/
+
+    ignoreErrors:
+        # TransducerPipeline is a deliberate fluent API with many public methods.
+        - '#Class GavG\\TransducibleCollections\\TransducerPipeline has too many public methods#'
+
+    # Treat unresolvable types conservatively rather than crashing.
+    reportUnmatchedIgnoredErrors: false

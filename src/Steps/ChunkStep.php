@@ -10,10 +10,11 @@ use Illuminate\Support\Collection;
 
 class ChunkStep implements StepInterface
 {
+    /** @var array<mixed> */
     protected array $buffer = [];
 
     /**
-     * @param  class-string<Collection>  $collectionClass
+     * @param  class-string<Collection<int|string, mixed>>  $collectionClass
      */
     public function __construct(
         protected StepInterface $next,

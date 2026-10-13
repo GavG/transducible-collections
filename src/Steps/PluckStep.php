@@ -8,6 +8,9 @@ use GavG\TransducibleCollections\StepInterface;
 
 class PluckStep implements StepInterface
 {
+    /**
+     * @param string|array<mixed> $value
+     */
     public function __construct(
         protected StepInterface $next,
         protected string|array $value,
@@ -15,10 +18,10 @@ class PluckStep implements StepInterface
     ) {
     }
 
-    public function step(mixed $acc, mixed $item, mixed $currentKey): mixed
+    public function step(mixed $acc, mixed $value, mixed $key): mixed
     {
-        $extractedValue = data_get($item, $this->value);
-        $extractedKey = $this->key !== null ? data_get($item, $this->key) : null;
+        $extractedValue = data_get($value, $this->value);
+        $extractedKey = $this->key !== null ? data_get($value, $this->key) : null;
 
         return $this->next->step($acc, $extractedValue, $extractedKey);
     }

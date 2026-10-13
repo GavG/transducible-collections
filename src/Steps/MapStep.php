@@ -25,11 +25,7 @@ class MapStep implements StepInterface
 
     public function step(mixed $acc, mixed $value, mixed $key): mixed
     {
-        return $this->next->step(
-            acc: $acc,
-            value: $this->invoke($this->callback, $value, $key),
-            key: $key,
-        );
+        return $this->next->step($acc, $this->invoke($this->callback, $value, $key), $key);
     }
 
     public function complete(mixed $acc): mixed

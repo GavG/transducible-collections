@@ -27,6 +27,7 @@ class HigherOrderTransducerProxy
     /**
      * Proxy a method call onto the pipeline items.
      */
+    /** @param array<mixed> $parameters */
     public function __call(string $method, array $parameters): TransducerPipeline
     {
         return $this->pipeline->{$this->method}(function ($value) use ($method, $parameters) {

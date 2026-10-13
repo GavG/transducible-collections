@@ -69,7 +69,7 @@ class TransducerPipeline
     /**
      * The target collection class to collect into, if specified.
      *
-     * @var class-string<Collection>|null
+     * @var class-string<Collection<int|string, mixed>>|null
      */
     protected ?string $targetCollectionClass = null;
 
@@ -91,7 +91,7 @@ class TransducerPipeline
     /**
      * Set the collection class that the pipeline should collect into.
      *
-     * @param  class-string<Collection>  $collectionClass
+     * @param  class-string<Collection<int|string, mixed>>  $collectionClass
      */
     public function into(string $collectionClass): static
     {
@@ -103,7 +103,7 @@ class TransducerPipeline
     /**
      * Get the collection class to instantiate when creating new collections.
      *
-     * @return class-string<Collection>
+     * @return class-string<Collection<int|string, mixed>>
      */
     public function getCollectionClass(): string
     {
@@ -285,12 +285,15 @@ class TransducerPipeline
      */
     public function chunk(int $size): static
     {
-        return $this->addTransducer(fn (StepInterface $next) => new ChunkStep($next, $size, $this->getCollectionClass()));
+        $collectionClass = $this->getCollectionClass();
+
+        return $this->addTransducer(fn (StepInterface $next) => new ChunkStep($next, $size, $collectionClass));
     }
 
     /**
      * Get the values of a given key.
      */
+    /** @param string|array<mixed> $value */
     public function pluck(string|array $value, ?string $key = null): static
     {
         return $this->addTransducer(fn (StepInterface $next) => new PluckStep($next, $value, $key));
@@ -548,6 +551,7 @@ class TransducerPipeline
     /**
      * Get all of the items in the collection.
      */
+    /** @return array<mixed> */
     public function all(): array
     {
         $result = $this->transduce();
@@ -558,6 +562,7 @@ class TransducerPipeline
     /**
      * Get the collection of items as a plain array.
      */
+    /** @return array<mixed> */
     public function toArray(): array
     {
         $result = $this->transduce();
@@ -569,6 +574,10 @@ class TransducerPipeline
      * Evaluate and return as a Collection instance matching the target collection type.
      *
      * @param  class-string<Collection>|null  $collectionClass
+     */
+    /**
+     * @param  class-string<Collection<int|string, mixed>>|null  $collectionClass
+     * @return Collection<int|string, mixed>
      */
     public function collect(?string $collectionClass = null): Collection
     {
